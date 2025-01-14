@@ -36,7 +36,7 @@ const canDoparsonal = () => {
         score[1] === mScore[1] && 
         score[2] === mScore[2] && 
         score[3] === mScore[3]
-    );//error
+    );//データが見つからなかった場合の処理
     // 新しいドキュメントを作成
     const newDocFile = templateFile.makeCopy(`個人票_${mScore[1]}_${mScore[2]}_${mScore[3]}_${mScore[0]}`);
     // ドキュメントの本文を取得
