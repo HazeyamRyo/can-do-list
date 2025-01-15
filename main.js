@@ -1,32 +1,25 @@
 const canDoParsonal = () => {
     
-    function getSheet(id){
-        // スプレッドシートのID
-        const spreadsheetId = id;
-
-        // スプレッドシートを開く
-        const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
-
-        // シートを取得
-        const sheet = spreadsheet.getSheetByName('各学年の点数');
-
-        // 最終行を取得
-        const lastRow = sheet.getLastRow();
-
-        // 最終列を取得
-        const lastColumn = sheet.getLastColumn();
-
-        // データを取得
-        const range = sheet.getRange(2, 2, lastRow, lastColumn);
-        const data = range.getValues();
+    function getSheetData(spreadsheetIds, sheetName) {
+        const data = {};
+        spreadsheetIds.forEach((spreadsheetId, index) => {
+            const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+            const sheet = spreadsheet.getSheetByName(sheetName);
+            const lastRow = sheet.getLastRow();
+            const lastColumn = sheet.getLastColumn();
+            data[index] = sheet.getRange(2, 2, lastRow - 1, lastColumn).getValues();
+        });
         return data;
-
-    };
-
-    const mData = getSheet('1mY7UeObWpriZX5DhdFe56p7BcVdTqFzYHD9QGQRDjxs');
-    const fData = getSheet('1V5vAiDbUk683CG1ukk1TG8UbngApHdCXHuFqvPoXt5k'); 
-    // ひな形のドキュメント (Fileクラスのオブジェクトを取得)
-    const templateFile = DriveApp.getFileById('1NSGZf5ddeTJpguTmwPuv2PDC4aQcP3hAMSw_hl6CRNw');
+    }
+    
+    const spreadsheetIds = ['1mY7UeObWpriZX5DhdFe56p7BcVdTqFzYHD9QGQRDjxs', '1V5vAiDbUk683CG1ukk1TG8UbngApHdCXHuFqvPoXt5k'];
+    const sheetData = getSheetData(spreadsheetIds, '各学年の点数'); // シート名は同じと仮定
+    const mData = sheetData[0];
+    const fData = sheetData[1];
+    
+    
+    // ひな形のドキュメント
+    const templateFile = DriveApp.getFileById('1NSGZf5ddeTJpguTmwPuv2PDC4aQcP3hAMSw_hl6CRNw');    
     //ドキュメントの保存先を指定
     // 保存先のフォルダIDを取得
     const folderId = "1wpBjCqE76hCihZp7xj2iosoY_DaX5lEg"; 
@@ -49,12 +42,10 @@ const canDoParsonal = () => {
 
     // ドキュメントに書き込む関数
     function writing(mScore, fScore) {
-        // 新しいドキュメントを作成
-        const newDocFile = templateFile.makeCopy(`個人票_${mScore[1]}_${mScore[2]}_${mScore[3]}_${mScore[0]}`);
-        newDocFile.moveTo(folder);
 
         // ドキュメントの本文を取得
-        const newDoc = DocumentApp.openById(newDocFile.getId());
+        // ドキュメントのコピーを作成し、Document オブジェクトを取得
+        const newDoc = templateFile.makeCopy(`個人票_${mScore[1]}_${mScore[2]}_${mScore[3]}_${mScore[0]}`, folder).getAs('application/vnd.google-apps.document'); 
         const body = newDoc.getBody();
         const documentData = {
             grade: mScore[1],
@@ -89,29 +80,52 @@ const canDoParsonal = () => {
             tReading: calculateTransition(mScore[11], fScore[11]),
             tAverage: calculateTransition(mScore[12], fScore[12])
         };
-        //ドキュメントに書き込むのに使う配列
-        const dDArray = ["grade", "home", "num", "name", "mGreeting", "mAppearance", "mClass", "mListen", "mBeautification", "mTime", "mPhone", "mReading", "mAverage", "fGreeting", "fAppearance", "fClass", "fListen", "fBeautification", "fTime", "fPhone", "fReading", "fAverage", "tGreeting", "tAppearance", "tClass", "tListen", "tBeautification", "tTime", "tPhone", "tReading", "tAverage"];
-
-        // プレースホルダーを置き換える
-        for (let i = 0; i < dDArray.length; i++) {
-        body.replaceText(`{{${dDArray[i]}}}`, documentData[dDArray[i]]);
-        }
+        // 一度に置き換え
+        body.replaceText("{{grade}}", documentData.grade)
+            .replaceText("{{home}}", documentData.home)
+            .replaceText("{{num}}", documentData.num)
+            .replaceText("{{name}}", documentData.name)
+            .replaceText("{{mGreeting}}", documentData.mGreeting)
+            .replaceText("{{mAppearance}}", documentData.mAppearance)
+            .replaceText("{{mClass}}", documentData.mClass)
+            .replaceText("{{mListen}}", documentData.mListen)
+            .replaceText("{{mBeautification}}", documentData.mBeautification)
+            .replaceText("{{mTime}}", documentData.mTime)
+            .replaceText("{{mPhone}}", documentData.mPhone)
+            .replaceText("{{mReading}}", documentData.mReading)
+            .replaceText("{{mAverage}}", documentData.mAverage)
+            .replaceText("{{fGreeting}}", documentData.fGreeting)
+            .replaceText("{{fAppearance}}", documentData.fAppearance)
+            .replaceText("{{fClass}}", documentData.fClass)
+            .replaceText("{{fListen}}", documentData.fListen)
+            .replaceText("{{fBeautification}}", documentData.fBeautification)
+            .replaceText("{{fTime}}", documentData.fTime)
+            .replaceText("{{fPhone}}", documentData.fPhone)
+            .replaceText("{{fReading}}", documentData.fReading)
+            .replaceText("{{fAverage}}", documentData.fAverage)
+            .replaceText("{{tGreeting}}", documentData.tGreeting)
+            .replaceText("{{tAppearance}}", documentData.tAppearance)
+            .replaceText("{{tClass}}", documentData.tClass)
+            .replaceText("{{tListen}}", documentData.tListen)
+            .replaceText("{{tBeautification}}", documentData.tBeautification)
+            .replaceText("{{tTime}}", documentData.tTime)
+            .replaceText("{{tPhone}}", documentData.tPhone)
+            .replaceText("{{tReading}}", documentData.tReading)
+            .replaceText("{{tAverage}}", documentData.tAverage);
     }
+
+    const fDataObject = {};
+    fData.forEach(score => {
+        const key = `${score[1]}_${score[2]}_${score[3]}`;
+        fDataObject[key] = score;
+    });
 
 //mScoreが存在する生徒の数だけドキュメントを作成
-for (let i = 0; i < 3; i++) {
-    // 1年1ホームi番の中間の点数を取得
+for (let i = 0; i < mData.length; i++) {
     const mScore = mData[i];
-    //1年1ホーム1番の期末の点数を、fDataの配列の中からdocumentDataMiddleのgrade,home,numが同じ配列を取得
-    let fScore = fData.find(score => 
-        score[1] === mScore[1] && 
-        score[2] === mScore[2] && 
-        score[3] === mScore[3]
-    );
-    //データが見つからなかった場合の処理   
-    if (!fScore) {
-        fScore = [mScore[0], mScore[1], mScore[2], mScore[3], "未提出", "未提出", "未提出", "未提出", "未提出", "未提出", "未提出", "未提出", "未提出"];
-    }
+    const key = `${mScore[1]}_${mScore[2]}_${mScore[3]}`;
+    let fScore = fDataObject[key] || [mScore[0], mScore[1], mScore[2], mScore[3], "未提出", "未提出", "未提出", "未提出", "未提出", "未提出", "未提出", "未提出", "未提出"];
+
     //fDataからmScoreと同じ配列を削除
     const index = fData.indexOf(fScore);
     if (index > -1) {
